@@ -80,8 +80,7 @@ def build_map(df: pd.DataFrame) -> folium.Map:
         folium.Marker([
             lat0, lon0
         ], icon=folium.DivIcon(
-            html=f"<div style='font-size:12px;font-weight:bold;background:rgba(255,255,255,0.75);padding:2px 4px;border-radius:4px;'>{name}</div>"))
-        .add_to(m)
+            html=f"<div style='font-size:12px;font-weight:bold;background:rgba(255,255,255,0.75);padding:2px 4px;border-radius:4px;'>{name}</div>")).add_to(m)
 
         for i, (_, row) in enumerate(g.iterrows()):
             lat_c, lon_c = (
@@ -105,8 +104,7 @@ def build_map(df: pd.DataFrame) -> folium.Map:
             folium.Marker([
                 lat_c, lon_c
             ], icon=folium.DivIcon(
-                html=f"<div style='font-size:11px;font-weight:bold;transform:translate(-50%,-12px);'>{int(row['평형'])}평</div>"))
-            .add_to(m)
+                html=f"<div style='font-size:11px;font-weight:bold;transform:translate(-50%,-12px);'>{int(row['평형'])}평</div>")).add_to(m)
 
     # ── 안내·홍보·제보 오버레이 CSS/HTML ──
     overlay_html = f"""
