@@ -20,7 +20,8 @@ import re
 from folium.plugins import MarkerCluster
 from math import sin, cos, pi
 from streamlit_autorefresh import st_autorefresh
-from streamlit_folium import st_folium
+from streamlit_folium import st_folium  # 성능용 남겨두되 현재는 사용 X
+from streamlit.components.v1 import html as st_html  # folium HTML 직접 임베드
 
 # ──────────────────── 시트 / 기본 옵션 ──────────────────
 SHEET_ID = "1V0xg4JMhrcdEm8QAnjACiZXo-8gqcQKy8WoRfMY7wqE"
@@ -215,12 +216,13 @@ def main():
     # 15분마다 전체 리프레시
     st_autorefresh(interval=15 * 60 * 1000, key="auto_refresh")
 
-    # ▶︎ 지도 + 데이터 빌드 (스피너 제공)
+        # ▶︎ 지도 + 데이터 빌드 (스피너 제공)
     with st.spinner("지도 로딩 중…"):
         df = build_dataframe()
         folium_map = build_map(df)
-        # folium을 iframe으로 렌더 — 가볍고 빠름
-        st_folium(folium_map, width="100%", height=800)
+        # folium 전체 HTML 직접 임베드 — 오버레이 보존
+        map_html = folium_map.get_root().render()
+        st_html(map_html, height=800, scrolling=False)
 
 
 if __name__ == "__main__":
