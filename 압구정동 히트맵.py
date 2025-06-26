@@ -62,14 +62,9 @@ overlay_html = """
   .notice {{top:8px; right:10px; font-size:12px; color:#666;}}
 
   /* ── 모바일(≤768px) ── */
-  @media (max-width:768px) {
-    /* 안내·홍보 박스를 위쪽으로 맞춰 나란히 */
-    .legend {top:110px; left:2%;  width:46%; font-size:11px; line-height:1.45;}
-    .promo  {top:110px; right:2%; width:42%; font-size:13px; line-height:1.45;}
-    .report-btn {bottom:25px;}
-    .notice {font-size:10px;}
-  }}
-    .promo  {{bottom:120px; right:2%; width:42%; font-size:13px; line-height:1.45;}}
+  @media (max-width:768px) {{
+    .legend {{top:110px; left:2%;  width:46%; font-size:11px; line-height:1.45;}}
+    .promo  {{top:110px; right:2%; width:42%; font-size:13px; line-height:1.45;}}
     .report-btn {{bottom:25px;}}
     .notice {{font-size:10px;}}
   }}
@@ -80,6 +75,8 @@ overlay_html = """
     .promo  {{width:48%; font-size:12px;}}
   }}
 </style>
+...
+""".format(FORM_URL=FORM_URL)
 
 <!-- 자동 업데이트 알림 -->
 <div class='overlay-box notice'>신고가가 생길 때마다 자동 업데이트됩니다</div>
