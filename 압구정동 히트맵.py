@@ -144,48 +144,64 @@ def build_map(df: pd.DataFrame) -> folium.Map:
                 icon=folium.DivIcon(html=f"<div style='font-size:11px;font-weight:bold;transform:translate(-50%,-12px);'>{int(row['평형'])}평</div>")
             ).add_to(m)
 
+       # ── 안내·홍보·제보 오버레이 ──────────────────────────────
     overlay_html = f"""
     <style>
         body {{position:relative !important;}}
         .overlay-box {{position:absolute; z-index:9998;}}
+
+        /* 공통 위치 */
         .legend, .promo, .report-btn {{bottom:20px;}}
-        .legend {{left:10px; width:520px;}}
-        .promo  {{right:10px; width:220px;}}
+        .legend {{left:10px; width:520px; font-size:13px; line-height:1.55;}}
+        .promo  {{right:10px; width:260px; font-size:18px; line-height:1.4;}}
         .report-btn {{left:50%; transform:translateX(-50%); z-index:9999;}}
+
+        /* 모바일 레이아웃 */
         @media (max-width:768px) {{
             .legend {{bottom:120px; left:50%; transform:translateX(-50%); width:90%;}}
-            .promo {{display:none;}}
+            .promo  {{display:none;}}
             .report-btn {{bottom:30px;}}
         }}
     </style>
 
-    <!-- 타이틀 -->
+    <!-- 🔹 타이틀 -->
     <div class='overlay-box' style='top:8px; left:50%; transform:translateX(-50%); text-align:center; z-index:9999;'>
-        <div style='font-size:20px; font-weight:bold; background:rgba(255,255,255,0.9); padding:2px 8px; border-radius:4px;'>압구정동 신고가 맵</div>
-        <div style='font-size:14px;'>신고가가 생길 때마다 자동 업데이트됩니다</div>
+        <div style='font-size:24px; font-weight:bold; background:rgba(255,255,255,0.9); padding:4px 12px; border-radius:6px;'>
+            압구정동 신고가 맵
+        </div>
+        <div style='font-size:16px;'>신고가가 생길 때마다 자동 업데이트됩니다</div>
     </div>
 
-    <!-- 안내 박스 -->
-    <div class='overlay-box legend' style='background:rgba(255,255,255,0.95); padding:10px; font-size:12px; line-height:1.5; border:1px solid #ccc; border-radius:6px;'>
+    <!-- 🔹 안내 박스 -->
+    <div class='overlay-box legend' style='background:rgba(255,255,255,0.95); padding:14px; border:2px solid #888; border-radius:8px;'>
         <b>📌 안내</b><br>
-        - 실거래 신고가 미등록 거래를 표시합니다.<br>
-        - 마커를 클릭하면 단지·평형별 상세 정보 확인 가능<br>
-        - 신고가는 해약·취소될 수 있으며 참고용입니다.
+        실거래 등록전 <b>신고&nbsp;약정가</b> 내역을 표시합니다.<br>
+        마커를 클릭하면 <b>단지·평형별</b> 상세 내역을 확인할 수 있습니다.<br>
+        신고 약정가는 거래허가 불허·해약 등에 의해 취소될 수 있으며<br>
+        금액에 오차가 있을 수 있으므로 감안해서 보시기 바랍니다.<br>
+        상승률은 <b>24년 가격 대비</b> 상승률이며,<br>
+        미등록 신고약정가가 있을 경우 신고약정가로 표시됩니다.<br>
+        나타난 신고가 내역에 오류가 있거나 반영이 안된 건은<br>
+        <b>“신고가 제보하기”</b> 버튼으로 의견을 주실 수 있습니다.
     </div>
 
-    <!-- 홍보 박스 -->
-    <div class='overlay-box promo' style='background:#ffe6f2; border:2px solid #ff99cc; border-radius:6px; padding:8px; font-size:12px; line-height:1.3; text-align:center;'>
-        <b>압구정 거래는<br>"압구정 원 부동산"</b><br>
-        ☎ 02-540-3334
+    <!-- 🔹 홍보 박스 -->
+    <div class='overlay-box promo' style='background:#ffe6f2; border:3px solid #ff99cc; border-radius:8px; padding:12px; text-align:center;'>
+        압구정 <b>매수·매도 상담</b>은<br>
+        “<b>압구정 원 부동산</b>”<br>
+        ☎ 02&nbsp;540&nbsp;3334
     </div>
 
-    <!-- 신고가 제보 버튼 -->
+    <!-- 🔹 신고가 제보 버튼 -->
     <div class='overlay-box report-btn'>
-        <a href='{FORM_URL}' target='_blank' style='background:#007bff; color:#fff; padding:10px 18px; border-radius:6px; font-size:14px; font-weight:bold; text-decoration:none;'>📝 신고가 제보하기</a>
+        <a href='{FORM_URL}' target='_blank'
+           style='background:#007bff; color:#fff; padding:12px 22px; border-radius:8px;
+                  font-size:16px; font-weight:bold; text-decoration:none;'>
+           📝 신고가 제보하기
+        </a>
     </div>
     """
     m.get_root().html.add_child(folium.Element(overlay_html))
-    return m
 
 # ────────────────── Streamlit UI ──────────────────
 
