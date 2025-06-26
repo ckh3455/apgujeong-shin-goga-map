@@ -63,13 +63,20 @@ overlay_html = """
 
   /* 모바일 ≤768px */
   @media (max-width:768px) {{
-    .legend {{top:110px;left:2%;width:46%;font-size:11px;line-height:1.45;}}
-    .promo  {{top:110px;right:2%;width:42%;font-size:13px;line-height:1.45;}}
+    /* 아래에서 120px 위에, 좌·우 나란히 */
+    .legend {{bottom:120px; top:auto; left:2%;  width:46%; font-size:11px; line-height:1.45;}}
+    .promo  {{bottom:120px; top:auto; right:2%; width:42%; font-size:13px; line-height:1.45;}}
     .report-btn {{bottom:25px;}}
     .notice {{font-size:10px;}}
   }}
 
   /* 초소형 ≤480px */
+  @media (max-width:480px) {{
+    .legend {{width:48%; font-size:10.5px;}}
+    .promo  {{width:48%; font-size:12px;}}
+  }}
+
+/* 초소형 ≤480px */
   @media (max-width:480px) {{
     .legend {{width:48%;font-size:10.5px;}}
     .promo  {{width:48%;font-size:12px;}}
