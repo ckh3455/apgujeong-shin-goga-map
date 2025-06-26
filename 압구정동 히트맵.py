@@ -51,55 +51,53 @@ def pick_color(row, idx, size):
 #   → CSS 중괄호는 {{ }} 로 이스케이프, FORM_URL 자리만 {FORM_URL}
 overlay_html = """
 <style>
-  body {{position:relative !important; margin:0;}}
-  .overlay-box {{position:absolute; z-index:9998;}}
+  body {{position:relative !important;margin:0;}}
+  .overlay-box {{position:absolute;z-index:9998;}}
 
-  /* ── 기본(데스크톱) ── */
-  .legend, .promo, .report-btn {{bottom:20px;}}
-  .legend {{left:10px;  width:520px; font-size:12px; line-height:1.55;}}
-  .promo  {{right:10px; width:240px; font-size:16px; line-height:1.4;}}
-  .report-btn {{left:50%; transform:translateX(-50%); z-index:9999;}}
-  .notice {{top:8px; right:10px; font-size:12px; color:#666;}}
+  /* 데스크톱 */
+  .legend,.promo,.report-btn {{bottom:20px;}}
+  .legend {{left:10px;width:520px;font-size:12px;line-height:1.55;}}
+  .promo  {{right:10px;width:240px;font-size:16px;line-height:1.4;}}
+  .report-btn {{left:50%;transform:translateX(-50%);z-index:9999;}}
+  .notice {{top:8px;right:10px;font-size:12px;color:#666;}}
 
-  /* ── 모바일(≤768px) ── */
+  /* 모바일 ≤768px */
   @media (max-width:768px) {{
-    .legend {{top:110px; left:2%;  width:46%; font-size:11px; line-height:1.45;}}
-    .promo  {{top:110px; right:2%; width:42%; font-size:13px; line-height:1.45;}}
+    .legend {{top:110px;left:2%;width:46%;font-size:11px;line-height:1.45;}}
+    .promo  {{top:110px;right:2%;width:42%;font-size:13px;line-height:1.45;}}
     .report-btn {{bottom:25px;}}
     .notice {{font-size:10px;}}
   }}
 
-  /* ── 초소형(≤480px) ── */
+  /* 초소형 ≤480px */
   @media (max-width:480px) {{
-    .legend {{width:48%; font-size:10.5px;}}
-    .promo  {{width:48%; font-size:12px;}}
+    .legend {{width:48%;font-size:10.5px;}}
+    .promo  {{width:48%;font-size:12px;}}
   }}
 </style>
-...
-""".format(FORM_URL=FORM_URL)
 
-<!-- 자동 업데이트 알림 -->
-<div class='overlay-box notice'>신고가가 생길 때마다 자동 업데이트됩니다</div>
+<!-- 자동 업데이트 안내 -->
+<div class='overlay-box notice'>지도는 새 신고가가 입력될 때마다 자동 업데이트됩니다</div>
 
 <!-- 안내 박스 -->
-<div class='overlay-box legend' style='background:rgba(255,255,255,0.95); padding:10px; border:1px solid #888; border-radius:8px;'>
+<div class='overlay-box legend' style='background:rgba(255,255,255,0.95);padding:10px;border:1px solid #888;border-radius:8px;'>
   <b>&#128204; 안내</b><br>
-
-  실거래 등록 전 <b>신고&nbsp;약정가</b> 내역을 표시합니다.<br>
-  마커를 클릭하면 <b>단지·평형별</b> 상세 내역을 확인할 수 있습니다.<br>
+  실거래 등록 전 <b>신고 약정가</b> 내역을 표시합니다.<br>
+  마커를 클릭하면 단지·평형별 상세 내역을 확인할 수 있습니다.<br>
   신고 약정가는 거래허가 불허·해약 등에 의해 취소될 수 있으며 금액에 오차가 있을 수 있습니다.<br>
-  상승률은 <b>24년 가격 대비</b> 상승률이며, 미등록 신고약정가가 있을 경우 신고약정가로 표시됩니다.<br>
-  오류나 미반영 건은 <b>“신고가 제보하기”</b> 버튼으로 알려 주세요.
+  상승률은 24년 가격 대비 상승률이며, 미등록 신고약정가가 있을 경우 신고약정가로 표시됩니다.<br>
+  오류나 미반영 건은 <b>"신고가 제보하기"</b> 버튼으로 알려 주세요.
 </div>
 
 <!-- 홍보 박스 -->
-<div class='overlay-box promo' style='background:#ffe6f2; border:2px solid #ff99cc; border-radius:8px; padding:10px; text-align:center;'>
-  압구정 <b>매수·매도 상담</b>은<br>“<b>압구정 원 부동산</b>”<br>☎ 02&nbsp;540&nbsp;3334
+<div class='overlay-box promo' style='background:#ffe6f2;border:2px solid #ff99cc;border-radius:8px;padding:10px;text-align:center;'>
+  압구정 <b>매수·매도 상담</b>은<br><b>압구정 원 부동산</b><br>
+  ☎ 02-540-3334
 </div>
 
 <!-- 신고가 제보 버튼 -->
 <div class='overlay-box report-btn'>
-  <a href='{FORM_URL}' target='_blank' style='background:#007bff; color:#fff; padding:10px 18px; border-radius:8px; font-size:14px; font-weight:bold; text-decoration:none;'>📝 신고가 제보하기</a>
+  <a href='{FORM_URL}' target='_blank' style='background:#007bff;color:#fff;padding:10px 18px;border-radius:8px;font-size:14px;font-weight:bold;text-decoration:none;'>📝 신고가 제보하기</a>
 </div>
 """.format(FORM_URL=FORM_URL)
 
