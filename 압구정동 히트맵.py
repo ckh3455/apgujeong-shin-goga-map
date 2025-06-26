@@ -112,21 +112,41 @@ n        .add_to(m)
             ], icon=folium.DivIcon(html=f"<div style='font-size:11px;font-weight:bold;transform:translate(-50%,-12px);'>{int(row['평형'])}평</div>")).add_to(m)
 
     # ───────── overlay CSS & HTML ─────────
-    m.get_root().html.add_child(folium.Element(f"""
+        m.get_root().html.add_child(folium.Element("""
     <style>
-        body {{position:relative !important;}}
-        .overlay-box {{position:absolute; z-index:9998;}}
-        .legend {{bottom:20px; left:10px; width:520px;}}
-        .promo  {{bottom:20px; right:10px; width:220px;}}
-        .report-btn {{bottom:20px; left:50%; transform:translateX(-50%); z-index:9999;}}
-        @media (max-width:768px) {{
-            .legend {{bottom:120px; left:50%; transform:translateX(-50%); width:90%;}}
-            .promo {{display:none;}}
-            .report-btn {{bottom:30px;}}
-        }}
-    </style>"""))
+        body {position:relative !important;}
+        .overlay-box {position:absolute; z-index:9998;}
+        .legend {bottom:20px; left:10px; width:520px;}
+        .promo  {bottom:20px; right:10px; width:220px;}
+        .report-btn {bottom:20px; left:50%; transform:translateX(-50%); z-index:9999;}
+        @media (max-width:768px) {
+            .legend {bottom:120px; left:50%; transform:translateX(-50%); width:90%;}
+            .promo {display:none;}
+            .report-btn {bottom:30px;}
+        }
+    </style>
 
-    m.get_root().html.add_child(folium.Element("""
-      <div class='overlay-box' style='top:8px; left:50%; transform:translateX(-50%); text-align:center; z-index:9999;'>
+    <div class='overlay-box' style='top:8px; left:50%; transform:translateX(-50%); text-align:center; z-index:9999;'>
         <div style='font-size:20px; font-weight:bold; background:rgba(255,255,255,0.9); padding:2px 8px; border-radius:4px;'>압구정동 신고가 맵</div>
-        <div style
+        <div style='font-size:14px;'>신고가가 생길 때마다 자동 업데이트됩니다</div>
+    </div>
+
+    <div class='overlay-box legend' style='background:rgba(255,255,255,0.95); padding:10px; font-size:12px; line-height:1.5; border:1px solid #ccc; border-radius:6px;'>
+        <b>📌 안내</b><br>
+        - 실거래 신고가 미등록 거래를 표시합니다.<br>
+        - 마커를 클릭하면 단지·평형별 상세 정보 확인 가능<br>
+        - 신고가는 해약·취소될 수 있으며 참고용입니다.
+    </div>
+
+    <div class='overlay-box promo' style='background:#ffe6f2; border:2px solid #ff99cc; border-radius:6px; padding:8px; font-size:12px; line-height:1.3; text-align:center;'>
+        <b>압구정 거래는<br>"압구정 원 부동산"</b><br>
+        ☎ 02-540-3334
+    </div>
+
+    <div class='overlay-box report-btn'>
+        <a href='https://docs.google.com/forms/d/e/1FAIpQLScu-x_0R-XxNH19J8N5rbI9FkPLgBGOjzY_A9yiFAIMHelCmQ/viewform'
+           target='_blank' style='background:#007bff; color:#fff; padding:10px 18px; border-radius:6px;
+           font-size:14px; font-weight:bold; text-decoration:none;'>📝 신고가 제보하기</a>
+    </div>
+    """))
+
