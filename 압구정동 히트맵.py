@@ -61,26 +61,22 @@ overlay_html = """
   .report-btn {{left:50%; transform:translateX(-50%); z-index:9999;}}
   .notice {{top:8px; right:10px; font-size:12px; color:#666;}}
 
-  /* ── 모바일(≤768px) : 안내·홍보 박스를 좌/우 45% 폭으로 나란히 ── */
-  @media (max-width:768px) {
-    /* 좌우 2% 여백, 폭 46%·42% → 겹침 방지 */
-    .legend {bottom:120px; left:2%;  width:46%; font-size:11px; line-height:1.45;}
-    .promo  {bottom:120px; right:2%; width:42%; font-size:13px; line-height:1.45;}
-    .report-btn {bottom:25px;}
-    .notice {font-size:10px;}
-  }}
-    .promo  {{bottom:110px; right:5%; width:45%; font-size:13px; line-height:1.45;}}
+  /* ── 모바일(≤768px) ── */
+  @media (max-width:768px) {{
+    .legend {{bottom:120px; left:2%;  width:46%; font-size:11px; line-height:1.45;}}
+    .promo  {{bottom:120px; right:2%; width:42%; font-size:13px; line-height:1.45;}}
     .report-btn {{bottom:25px;}}
     .notice {{font-size:10px;}}
   }}
-  /* ── 초소형(≤480px) : 폭 48%로 조금 더 좁힘 ── */
+
+  /* ── 초소형(≤480px) ── */
   @media (max-width:480px) {{
     .legend {{width:48%; font-size:10.5px;}}
     .promo  {{width:48%; font-size:12px;}}
   }}
 </style>
 
-<!-- 자동 업데이트 알림 (우측 상단) -->
+<!-- 자동 업데이트 알림 -->
 <div class='overlay-box notice'>신고가가 생길 때마다 자동 업데이트됩니다</div>
 
 <!-- 안내 박스 -->
@@ -100,10 +96,7 @@ overlay_html = """
 
 <!-- 신고가 제보 버튼 -->
 <div class='overlay-box report-btn'>
-  <a href='{FORM_URL}' target='_blank'
-     style='background:#007bff; color:#fff; padding:10px 18px; border-radius:8px; font-size:14px; font-weight:bold; text-decoration:none;'>
-     📝 신고가 제보하기
-  </a>
+  <a href='{FORM_URL}' target='_blank' style='background:#007bff; color:#fff; padding:10px 18px; border-radius:8px; font-size:14px; font-weight:bold; text-decoration:none;'>📝 신고가 제보하기</a>
 </div>
 """.format(FORM_URL=FORM_URL)
 
