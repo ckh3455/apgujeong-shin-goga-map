@@ -50,9 +50,22 @@ def pick_color(row, idx, size):
 def load_sheet_df():
     url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?gid={TAB_GID}&format=csv&cb={int(time.time())}"
     df = pd.read_csv(url)
-    for col in ['평형', '2024년', '2025년', '신고가']:
+    # 열 이름 앞뒤 공백 제거 → '신고가 ' 같은 오타 방지
+    df.columns = df.columns.str.strip()
+    # '신고가' 열이 없으면 빈 컬럼 생성
+        # '신고가' 열이 없으면 빈 컬럼 생성
+    if '신고가' not in df.columns:
+        df['신고가'] = np.nan
+
+    # ── 숫자 컬럼에 포함된 쉼표·'억'·공백 제거 후 float 변환 ──
+    num_cols = ['평형', '2024년', '2025년', '신고가']
+    for col in num_cols:
         if col in df.columns:
-            df[col] = pd.to_numeric(df[col], errors='coerce')
+            df[col] = (df[col]
+                        .astype(str)
+                        .str.replace(r'[ ,억원]', '', regex=True)
+                        .replace('', np.nan)
+                        .astype(float))
     return df
 
 # ────────────────── 데이터 가공 ──────────────────
@@ -72,8 +85,10 @@ def build_dataframe() -> pd.DataFrame:
     df['lat'] = pd.to_numeric(df[lat_col].map(clean), errors='coerce')
     df['lon'] = pd.to_numeric(df[lon_col].map(clean), errors='coerce')
 
-    if df[['lat', 'lon']].isna().any().any():
-        st.error("❗ 좌표 데이터(lat/lon) 누락 행이 있습니다.")
+    # 좌표 누락 행 제거 (없는 행은 필터링)
+    df = df.dropna(subset=['lat', 'lon']).copy()
+    if df.empty:
+        st.error("❗ 시트에 유효한 좌표(lat/lon) 데이터가 없습니다.")
         st.stop()
 
     # 신고가 유효값 및 상승률 계산
@@ -85,6 +100,14 @@ def build_dataframe() -> pd.DataFrame:
         ((df['latest'] - df['2024년']) / df['2024년'] * 100).round(1),
         np.nan,
     )
+
+    # 단지·평형별로 최신(가장 큰) 가격 행 하나만 남기기
+    df = (df
+           .sort_values(by=['단지명', '평형', '신고가_유효', '2025년', '2024년'],
+                        ascending=[True, True, False, False, False])
+           .drop_duplicates(subset=['단지명', '평형'], keep='first')
+           .reset_index(drop=True))
+
     return df
 
 # ────────────────── 지도 생성 ──────────────────
