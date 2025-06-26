@@ -50,14 +50,9 @@ def pick_color(row, idx, size):
 def load_sheet_df():
     url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?gid={TAB_GID}&format=csv&cb={int(time.time())}"
     df = pd.read_csv(url)
-    # 열 이름 앞뒤 공백 제거 → '신고가 ' 같은 오타 방지
     df.columns = df.columns.str.strip()
-    # '신고가' 열이 없으면 빈 컬럼 생성
-        # '신고가' 열이 없으면 빈 컬럼 생성
     if '신고가' not in df.columns:
         df['신고가'] = np.nan
-
-    # ── 숫자 컬럼에 포함된 쉼표·'억'·공백 제거 후 float 변환 ──
     num_cols = ['평형', '2024년', '2025년', '신고가']
     for col in num_cols:
         if col in df.columns:
@@ -72,8 +67,6 @@ def load_sheet_df():
 
 def build_dataframe() -> pd.DataFrame:
     df = load_sheet_df()
-
-    # 좌표 컬럼 탐색 및 정규화
     try:
         lat_col = next(c for c in df.columns if re.search(r'(lat|위도)', c, re.I))
         lon_col = next(c for c in df.columns if re.search(r'(lon|경도)', c, re.I))
@@ -85,13 +78,11 @@ def build_dataframe() -> pd.DataFrame:
     df['lat'] = pd.to_numeric(df[lat_col].map(clean), errors='coerce')
     df['lon'] = pd.to_numeric(df[lon_col].map(clean), errors='coerce')
 
-    # 좌표 누락 행 제거 (없는 행은 필터링)
     df = df.dropna(subset=['lat', 'lon']).copy()
     if df.empty:
         st.error("❗ 시트에 유효한 좌표(lat/lon) 데이터가 없습니다.")
         st.stop()
 
-    # 신고가 유효값 및 상승률 계산
     cond = (~df['신고가'].isna()) & (df['2025년'].isna() | (df['신고가'] > df['2025년']))
     df['신고가_유효'] = np.where(cond, df['신고가'], np.nan)
     df['latest'] = np.where(df['신고가_유효'].notna(), df['신고가_유효'], df['2025년'])
@@ -101,13 +92,11 @@ def build_dataframe() -> pd.DataFrame:
         np.nan,
     )
 
-    # 단지·평형별로 최신(가장 큰) 가격 행 하나만 남기기
     df = (df
            .sort_values(by=['단지명', '평형', '신고가_유효', '2025년', '2024년'],
                         ascending=[True, True, False, False, False])
            .drop_duplicates(subset=['단지명', '평형'], keep='first')
            .reset_index(drop=True))
-
     return df
 
 # ────────────────── 지도 생성 ──────────────────
@@ -131,12 +120,18 @@ def build_map(df: pd.DataFrame) -> folium.Map:
             if len(g) != 1:
                 folium.PolyLine([[lat0, lon0], [lat_c, lon_c]], color="#666", weight=1).add_to(m)
             color = pick_color(row, i, len(g))
+            popup_html = (
+                f"<div style='font-size:14px; line-height:1.45;'>"
+                f"<b>{row['단지명']} {int(row['평형'])}평</b><br>"
+                f"24년 최고가 {money(row['2024년'])}<br>"
+                f"25년 최고가 {money(row['2025년'])}<br>"
+                f"신고가 {shin(row['신고가_유효'])}<br>"
+                f"<b>상승률 {rate(row['상승률(%)'])}</b>"
+                "</div>"
+            )
             folium.CircleMarker(
                 [lat_c, lon_c], radius=MARKER_RADIUS, fill=True, fill_color=color, fill_opacity=0.9, stroke=False,
-                popup=folium.Popup(
-                    f"<b>{row['단지명']} {int(row['평형'])}평</b><br>24년 최고가 {money(row['2024년'])}<br>25년 최고가 {money(row['2025년'])}<br>신고가 {shin(row['신고가_유효'])}<br><b>상승률 {rate(row['상승률(%)'])}</b>",
-                    max_width=280
-                ),
+                popup=folium.Popup(popup_html, max_width=420),
                 tooltip=f"{int(row['평형'])}평"
             ).add_to(cluster)
             folium.Marker(
@@ -144,19 +139,14 @@ def build_map(df: pd.DataFrame) -> folium.Map:
                 icon=folium.DivIcon(html=f"<div style='font-size:11px;font-weight:bold;transform:translate(-50%,-12px);'>{int(row['평형'])}평</div>")
             ).add_to(m)
 
-       # ── 안내·홍보·제보 오버레이 ──────────────────────────────
     overlay_html = f"""
     <style>
         body {{position:relative !important;}}
         .overlay-box {{position:absolute; z-index:9998;}}
-
-        /* 공통 위치 */
         .legend, .promo, .report-btn {{bottom:20px;}}
         .legend {{left:10px; width:520px; font-size:13px; line-height:1.55;}}
         .promo  {{right:10px; width:260px; font-size:18px; line-height:1.4;}}
         .report-btn {{left:50%; transform:translateX(-50%); z-index:9999;}}
-
-        /* 모바일 레이아웃 */
         @media (max-width:768px) {{
             .legend {{bottom:120px; left:50%; transform:translateX(-50%); width:90%;}}
             .promo  {{display:none;}}
@@ -164,7 +154,6 @@ def build_map(df: pd.DataFrame) -> folium.Map:
         }}
     </style>
 
-    <!-- 🔹 타이틀 -->
     <div class='overlay-box' style='top:8px; left:50%; transform:translateX(-50%); text-align:center; z-index:9999;'>
         <div style='font-size:24px; font-weight:bold; background:rgba(255,255,255,0.9); padding:4px 12px; border-radius:6px;'>
             압구정동 신고가 맵
@@ -172,7 +161,6 @@ def build_map(df: pd.DataFrame) -> folium.Map:
         <div style='font-size:16px;'>신고가가 생길 때마다 자동 업데이트됩니다</div>
     </div>
 
-    <!-- 🔹 안내 박스 -->
     <div class='overlay-box legend' style='background:rgba(255,255,255,0.95); padding:14px; border:2px solid #888; border-radius:8px;'>
         <b>📌 안내</b><br>
         실거래 등록전 <b>신고&nbsp;약정가</b> 내역을 표시합니다.<br>
@@ -185,14 +173,12 @@ def build_map(df: pd.DataFrame) -> folium.Map:
         <b>“신고가 제보하기”</b> 버튼으로 의견을 주실 수 있습니다.
     </div>
 
-    <!-- 🔹 홍보 박스 -->
     <div class='overlay-box promo' style='background:#ffe6f2; border:3px solid #ff99cc; border-radius:8px; padding:12px; text-align:center;'>
         압구정 <b>매수·매도 상담</b>은<br>
         “<b>압구정 원 부동산</b>”<br>
         ☎ 02&nbsp;540&nbsp;3334
     </div>
 
-    <!-- 🔹 신고가 제보 버튼 -->
     <div class='overlay-box report-btn'>
         <a href='{FORM_URL}' target='_blank'
            style='background:#007bff; color:#fff; padding:12px 22px; border-radius:8px;
@@ -202,6 +188,7 @@ def build_map(df: pd.DataFrame) -> folium.Map:
     </div>
     """
     m.get_root().html.add_child(folium.Element(overlay_html))
+    return m
 
 # ────────────────── Streamlit UI ──────────────────
 
@@ -209,18 +196,11 @@ def main():
     st.set_page_config(page_title="압구정동 신고가 맵",
                        layout="wide",
                        initial_sidebar_state="collapsed")
-    # 15분마다 자동 새로고침
     st_autorefresh(interval=15 * 60 * 1000, key="auto_refresh")
-
     st.title("📈 압구정동 단지·평형별 신고가 맵")
-
-    # 데이터 로드 및 지도 생성
     df = build_dataframe()
     folium_map = build_map(df)
-
-    # 지도 렌더링
     st_html(folium_map.get_root().render(), height=800, scrolling=False)
-
 
 if __name__ == "__main__":
     main()
