@@ -150,3 +150,23 @@ def build_map(df: pd.DataFrame) -> folium.Map:
     m.get_root().html.add_child(folium.Element(overlay_html))
 
     return m
+
+# ─────────────────── Streamlit UI ───────────────────
+
+def main():
+    st.set_page_config(page_title="압구정동 신고가 맵", layout="wide", initial_sidebar_state="collapsed")
+    st_autorefresh(interval=15 * 60 * 1000, key="auto_refresh")
+
+    st.title("📈 압구정동 단지·평형별 신고가 맵")
+
+    # 데이터 로드 & 지도 생성
+    df = build_dataframe()
+    folium_map = build_map(df)
+
+    # folium HTML 삽입
+    map_html = folium_map.get_root().render()
+    st_html(map_html, height=800, scrolling=False)
+
+
+if __name__ == "__main__":
+    main()
