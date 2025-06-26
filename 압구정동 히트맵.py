@@ -62,8 +62,13 @@ overlay_html = """
   .notice {{top:8px; right:10px; font-size:12px; color:#666;}}
 
   /* ── 모바일(≤768px) : 안내·홍보 박스를 좌/우 45% 폭으로 나란히 ── */
-  @media (max-width:768px) {{
-    .legend {{bottom:110px; left:5%;  width:45%; font-size:11px; line-height:1.45;}}
+  @media (max-width:768px) {
+    /* 좌우 2% 여백, 폭 46%·42% → 겹침 방지 */
+    .legend {bottom:120px; left:2%;  width:46%; font-size:11px; line-height:1.45;}
+    .promo  {bottom:120px; right:2%; width:42%; font-size:13px; line-height:1.45;}
+    .report-btn {bottom:25px;}
+    .notice {font-size:10px;}
+  }}
     .promo  {{bottom:110px; right:5%; width:45%; font-size:13px; line-height:1.45;}}
     .report-btn {{bottom:25px;}}
     .notice {{font-size:10px;}}
