@@ -83,7 +83,8 @@ overlay_html = """
 
 <!-- 안내 박스 -->
 <div class='overlay-box legend' style='background:rgba(255,255,255,0.95); padding:10px; border:1px solid #888; border-radius:8px;'>
-  <b>📌 안내</b><br>
+  <b>&#128204; 안내</b><br>
+
   실거래 등록 전 <b>신고&nbsp;약정가</b> 내역을 표시합니다.<br>
   마커를 클릭하면 <b>단지·평형별</b> 상세 내역을 확인할 수 있습니다.<br>
   신고 약정가는 거래허가 불허·해약 등에 의해 취소될 수 있으며 금액에 오차가 있을 수 있습니다.<br>
