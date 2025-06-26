@@ -121,7 +121,7 @@ def build_map(df: pd.DataFrame) -> folium.Map:
                 folium.PolyLine([[lat0, lon0], [lat_c, lon_c]], color="#666", weight=1).add_to(m)
             color = pick_color(row, i, len(g))
             popup_html = (
-                f"<div style='font-size:14px; line-height:1.45;'>"
+                f"<div style='font-size:16px; line-height:1.6;'>"
                 f"<b>{row['단지명']} {int(row['평형'])}평</b><br>"
                 f"24년 최고가 {money(row['2024년'])}<br>"
                 f"25년 최고가 {money(row['2025년'])}<br>"
@@ -141,27 +141,32 @@ def build_map(df: pd.DataFrame) -> folium.Map:
 
     overlay_html = f"""
     <style>
-        body {{position:relative !important;}}
+        body {{position:relative !important; margin:0;}}
         .overlay-box {{position:absolute; z-index:9998;}}
+
         .legend, .promo, .report-btn {{bottom:20px;}}
         .legend {{left:10px; width:520px; font-size:13px; line-height:1.55;}}
         .promo  {{right:10px; width:260px; font-size:18px; line-height:1.4;}}
         .report-btn {{left:50%; transform:translateX(-50%); z-index:9999;}}
+
         @media (max-width:768px) {{
-            .legend {{bottom:120px; left:50%; transform:translateX(-50%); width:90%;}}
-            .promo  {{display:none;}}
-            .report-btn {{bottom:30px;}}
+            .legend {{bottom:110px; left:50%; transform:translateX(-50%); width:92%; font-size:11.5px;}}
+            .promo  {{right:10px; display:block; font-size:16px; width:220px;}}
+            .report-btn {{bottom:30px; padding:0;}}
+        }}
+        @media (max-width:480px) {{
+            .title-box h1 {{font-size:16px;}}
+            .title-box p  {{font-size:11px; right:8px; position:absolute; top:4px;}}
+            .legend {{bottom:100px; width:94%; font-size:11px; line-height:1.45;}}
         }}
     </style>
 
-    <div class='overlay-box' style='top:8px; left:50%; transform:translateX(-50%); text-align:center; z-index:9999;'>
-        <div style='font-size:24px; font-weight:bold; background:rgba(255,255,255,0.9); padding:4px 12px; border-radius:6px;'>
-            압구정동 신고가 맵
-        </div>
-        <div style='font-size:16px;'>신고가가 생길 때마다 자동 업데이트됩니다</div>
+    <div class='overlay-box title-box' style='top:30px; left:50%; transform:translateX(-50%); text-align:center; z-index:9999;'>
+        <h1 style='margin:0; font-size:20px; font-weight:bold; background:rgba(255,255,255,0.9); padding:4px 12px; border-radius:6px;'>압구정동 신고가 맵</h1>
+        <p style='margin:0; font-size:13px; color:#555; background:rgba(255,255,255,0.9); padding:0 6px; border-radius:4px; position:absolute; top:4px; right:-110px;'>신고가가 생길 때마다 자동 업데이트됩니다</p>
     </div>
 
-    <div class='overlay-box legend' style='background:rgba(255,255,255,0.95); padding:14px; border:2px solid #888; border-radius:8px;'>
+    <div class='overlay-box legend' style='background:rgba(255,255,255,0.95); padding:12px; border:2px solid #888; border-radius:8px;'>
         <b>📌 안내</b><br>
         실거래 등록전 <b>신고&nbsp;약정가</b> 내역을 표시합니다.<br>
         마커를 클릭하면 <b>단지·평형별</b> 상세 내역을 확인할 수 있습니다.<br>
@@ -173,7 +178,7 @@ def build_map(df: pd.DataFrame) -> folium.Map:
         <b>“신고가 제보하기”</b> 버튼으로 의견을 주실 수 있습니다.
     </div>
 
-    <div class='overlay-box promo' style='background:#ffe6f2; border:3px solid #ff99cc; border-radius:8px; padding:12px; text-align:center;'>
+    <div class='overlay-box promo' style='background:#ffe6f2; border:3px solid #ff99cc; border-radius:8px; padding:10px; text-align:center;'>
         압구정 <b>매수·매도 상담</b>은<br>
         “<b>압구정 원 부동산</b>”<br>
         ☎ 02&nbsp;540&nbsp;3334
