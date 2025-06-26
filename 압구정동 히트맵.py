@@ -46,30 +46,33 @@ def pick_color(row, idx, size):
     return DEFAULT_SINGLE_COLOR if size==1 else BRANCH_COLORS[idx % len(BRANCH_COLORS)]
 
 # ────────────────── 오버레이 HTML (전역) ──────────────────
-overlay_html = f"""
+# ────────────────── 오버레이 HTML (전역) ──────────────────
+# f-string → 일반 문자열 + .format() 으로 변경
+#   → CSS 중괄호는 {{ }} 로 이스케이프, FORM_URL 자리만 {FORM_URL}
+overlay_html = """
 <style>
-  body {position:relative !important; margin:0;}
-  .overlay-box {position:absolute; z-index:9998;}
+  body {{position:relative !important; margin:0;}}
+  .overlay-box {{position:absolute; z-index:9998;}}
 
   /* ── 기본(데스크톱) ── */
-  .legend, .promo, .report-btn {bottom:20px;}
-  .legend {left:10px; width:520px; font-size:12px; line-height:1.55;}
-  .promo  {right:10px; width:240px; font-size:16px; line-height:1.4;}
-  .report-btn {left:50%; transform:translateX(-50%); z-index:9999;}
-  .notice {top:8px; right:10px; font-size:12px; color:#666;}
+  .legend, .promo, .report-btn {{bottom:20px;}}
+  .legend {{left:10px;  width:520px; font-size:12px; line-height:1.55;}}
+  .promo  {{right:10px; width:240px; font-size:16px; line-height:1.4;}}
+  .report-btn {{left:50%; transform:translateX(-50%); z-index:9999;}}
+  .notice {{top:8px; right:10px; font-size:12px; color:#666;}}
 
   /* ── 모바일(≤768px) : 안내·홍보 박스를 좌/우 45% 폭으로 나란히 ── */
-  @media (max-width:768px) {
-    .legend {bottom:110px; left:5%;  width:45%; font-size:11px; line-height:1.45;}
-    .promo  {bottom:110px; right:5%; width:45%; font-size:13px; line-height:1.45;}
-    .report-btn {bottom:25px;}
-    .notice {font-size:10px;}
-  }
+  @media (max-width:768px) {{
+    .legend {{bottom:110px; left:5%;  width:45%; font-size:11px; line-height:1.45;}}
+    .promo  {{bottom:110px; right:5%; width:45%; font-size:13px; line-height:1.45;}}
+    .report-btn {{bottom:25px;}}
+    .notice {{font-size:10px;}}
+  }}
   /* ── 초소형(≤480px) : 폭 48%로 조금 더 좁힘 ── */
-  @media (max-width:480px) {
-    .legend {width:48%; font-size:10.5px;}
-    .promo  {width:48%; font-size:12px;}
-  }
+  @media (max-width:480px) {{
+    .legend {{width:48%; font-size:10.5px;}}
+    .promo  {{width:48%; font-size:12px;}}
+  }}
 </style>
 
 <!-- 자동 업데이트 알림 (우측 상단) -->
@@ -97,7 +100,7 @@ overlay_html = f"""
      📝 신고가 제보하기
   </a>
 </div>
-"""
+""".format(FORM_URL=FORM_URL)
 
 # ────────────────── 데이터 로드 ──────────────────
 @st.cache_data(ttl=30)
