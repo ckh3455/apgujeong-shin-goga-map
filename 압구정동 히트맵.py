@@ -48,22 +48,35 @@ def pick_color(row, idx, size):
 # ────────────────── 오버레이 HTML (전역) ──────────────────
 overlay_html = f"""
 <style>
-  body {{position:relative !important; margin:0;}}
-  .overlay-box {{position:absolute; z-index:9998;}}
-  .legend, .promo, .report-btn {{bottom:20px;}}
-  .legend {{left:10px; width:520px; font-size:12px; line-height:1.55;}}
-  .promo  {{right:10px; width:240px; font-size:16px; line-height:1.4;}}
-  .report-btn {{left:50%; transform:translateX(-50%); z-index:9999;}}
-  .notice {{top:8px; right:10px; font-size:12px; color:#666;}}
-  @media (max-width:768px) {{
-    .legend {{bottom:120px; left:50%; transform:translateX(-50%); width:92%; font-size:11px;}}
-    .promo  {{bottom:75px; left:50%; transform:translateX(-50%); width:250px; font-size:14px;}}
-    .report-btn {{bottom:18px;}}
-    .notice {{font-size:10px;}}
-  }}
+  body {position:relative !important; margin:0;}
+  .overlay-box {position:absolute; z-index:9998;}
+
+  /* ── 기본(데스크톱) ── */
+  .legend, .promo, .report-btn {bottom:20px;}
+  .legend {left:10px; width:520px; font-size:12px; line-height:1.55;}
+  .promo  {right:10px; width:240px; font-size:16px; line-height:1.4;}
+  .report-btn {left:50%; transform:translateX(-50%); z-index:9999;}
+  .notice {top:8px; right:10px; font-size:12px; color:#666;}
+
+  /* ── 모바일(≤768px) : 안내·홍보 박스를 좌/우 45% 폭으로 나란히 ── */
+  @media (max-width:768px) {
+    .legend {bottom:110px; left:5%;  width:45%; font-size:11px; line-height:1.45;}
+    .promo  {bottom:110px; right:5%; width:45%; font-size:13px; line-height:1.45;}
+    .report-btn {bottom:25px;}
+    .notice {font-size:10px;}
+  }
+  /* ── 초소형(≤480px) : 폭 48%로 조금 더 좁힘 ── */
+  @media (max-width:480px) {
+    .legend {width:48%; font-size:10.5px;}
+    .promo  {width:48%; font-size:12px;}
+  }
 </style>
+
+<!-- 자동 업데이트 알림 (우측 상단) -->
 <div class='overlay-box notice'>신고가가 생길 때마다 자동 업데이트됩니다</div>
-<div class='overlay-box legend' style='background:rgba(255,255,255,0.95); padding:12px; border:1px solid #888; border-radius:8px;'>
+
+<!-- 안내 박스 -->
+<div class='overlay-box legend' style='background:rgba(255,255,255,0.95); padding:10px; border:1px solid #888; border-radius:8px;'>
   <b>📌 안내</b><br>
   실거래 등록 전 <b>신고&nbsp;약정가</b> 내역을 표시합니다.<br>
   마커를 클릭하면 <b>단지·평형별</b> 상세 내역을 확인할 수 있습니다.<br>
@@ -71,11 +84,18 @@ overlay_html = f"""
   상승률은 <b>24년 가격 대비</b> 상승률이며, 미등록 신고약정가가 있을 경우 신고약정가로 표시됩니다.<br>
   오류나 미반영 건은 <b>“신고가 제보하기”</b> 버튼으로 알려 주세요.
 </div>
+
+<!-- 홍보 박스 -->
 <div class='overlay-box promo' style='background:#ffe6f2; border:2px solid #ff99cc; border-radius:8px; padding:10px; text-align:center;'>
   압구정 <b>매수·매도 상담</b>은<br>“<b>압구정 원 부동산</b>”<br>☎ 02&nbsp;540&nbsp;3334
 </div>
+
+<!-- 신고가 제보 버튼 -->
 <div class='overlay-box report-btn'>
-  <a href='{FORM_URL}' target='_blank' style='background:#007bff; color:#fff; padding:10px 18px; border-radius:8px; font-size:14px; font-weight:bold; text-decoration:none;'>📝 신고가 제보하기</a>
+  <a href='{FORM_URL}' target='_blank'
+     style='background:#007bff; color:#fff; padding:10px 18px; border-radius:8px; font-size:14px; font-weight:bold; text-decoration:none;'>
+     📝 신고가 제보하기
+  </a>
 </div>
 """
 
