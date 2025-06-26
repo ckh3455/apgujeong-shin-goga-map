@@ -1,1 +1,11 @@
 # apgujeong-shin-goga-map
+streamlit
+streamlit-folium
+streamlit-autorefresh
+pandas
+numpy
+folium
+# ↓ Sheets 비공개라면 필요
+gspread
+oauth2client
+openpyxl
