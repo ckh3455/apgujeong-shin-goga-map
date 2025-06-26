@@ -10,7 +10,7 @@
     streamlit run apgujeong_shin_goga_map.py
 '''
 
-# ────────────────── 패키지 ──────────────────
+# ────────────────────── 패키지 ──────────────────────
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -20,9 +20,9 @@ import re
 from folium.plugins import MarkerCluster
 from math import sin, cos, pi
 from streamlit_autorefresh import st_autorefresh
-from streamlit_folium import st_folium  # iframe 렌더로 속도 개선
+from streamlit_folium import st_folium
 
-# ────────────────── 시트 / 옵션 ──────────────────
+# ──────────────────── 시트 / 기본 옵션 ──────────────────
 SHEET_ID = "1V0xg4JMhrcdEm8QAnjACiZXo-8gqcQKy8WoRfMY7wqE"
 TAB_GID  = 1892600887
 FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLScu-x_0R-XxNH19J8N5rbI9FkPLgBGOjzY_A9yiFAIMHelCmQ/viewform"
@@ -44,6 +44,40 @@ def pick_color(row, idx, size):
         return CUSTOM_COLORS[row['단지명']]
     return DEFAULT_SINGLE_COLOR if size==1 else BRANCH_COLORS[idx % len(BRANCH_COLORS)]
 
+# ────────────────── 오버레이 HTML (전역) ──────────────────
+overlay_html = f"""
+<style>
+  body {{position:relative !important; margin:0;}}
+  .overlay-box {{position:absolute; z-index:9998;}}
+  .legend, .promo, .report-btn {{bottom:20px;}}
+  .legend {{left:10px; width:520px; font-size:12px; line-height:1.55;}}
+  .promo  {{right:10px; width:240px; font-size:16px; line-height:1.4;}}
+  .report-btn {{left:50%; transform:translateX(-50%); z-index:9999;}}
+  .notice {{top:8px; right:10px; font-size:12px; color:#666;}}
+  @media (max-width:768px) {{
+    .legend {{bottom:120px; left:50%; transform:translateX(-50%); width:92%; font-size:11px;}}
+    .promo  {{bottom:75px; left:50%; transform:translateX(-50%); width:250px; font-size:14px;}}
+    .report-btn {{bottom:18px;}}
+    .notice {{font-size:10px;}}
+  }}
+</style>
+<div class='overlay-box notice'>신고가가 생길 때마다 자동 업데이트됩니다</div>
+<div class='overlay-box legend' style='background:rgba(255,255,255,0.95); padding:12px; border:1px solid #888; border-radius:8px;'>
+  <b>📌 안내</b><br>
+  실거래 등록 전 <b>신고&nbsp;약정가</b> 내역을 표시합니다.<br>
+  마커를 클릭하면 <b>단지·평형별</b> 상세 내역을 확인할 수 있습니다.<br>
+  신고 약정가는 거래허가 불허·해약 등에 의해 취소될 수 있으며 금액에 오차가 있을 수 있습니다.<br>
+  상승률은 <b>24년 가격 대비</b> 상승률이며, 미등록 신고약정가가 있을 경우 신고약정가로 표시됩니다.<br>
+  오류나 미반영 건은 <b>“신고가 제보하기”</b> 버튼으로 알려 주세요.
+</div>
+<div class='overlay-box promo' style='background:#ffe6f2; border:2px solid #ff99cc; border-radius:8px; padding:10px; text-align:center;'>
+  압구정 <b>매수·매도 상담</b>은<br>“<b>압구정 원 부동산</b>”<br>☎ 02&nbsp;540&nbsp;3334
+</div>
+<div class='overlay-box report-btn'>
+  <a href='{FORM_URL}' target='_blank' style='background:#007bff; color:#fff; padding:10px 18px; border-radius:8px; font-size:14px; font-weight:bold; text-decoration:none;'>📝 신고가 제보하기</a>
+</div>
+"""
+
 # ────────────────── 데이터 로드 ──────────────────
 @st.cache_data(ttl=30)
 def load_sheet_df():
@@ -55,9 +89,9 @@ def load_sheet_df():
     for col in ['평형','2024년','2025년','신고가']:
         if col in df.columns:
             df[col] = (df[col].astype(str)
-                             .str.replace(r'[ ,억원]', '', regex=True)
-                             .replace('', np.nan)
-                             .astype(float))
+                           .str.replace(r'[ ,억원]', '', regex=True)
+                           .replace('', np.nan)
+                           .astype(float))
     return df
 
 # ────────────────── 데이터 가공 ──────────────────
@@ -65,6 +99,7 @@ def load_sheet_df():
 def build_dataframe():
     df = load_sheet_df()
 
+    # 위도·경도 자동 탐색
     try:
         lat_col = next(c for c in df.columns if re.search(r'(lat|위도)', c, re.I))
         lon_col = next(c for c in df.columns if re.search(r'(lon|경도)', c, re.I))
@@ -80,53 +115,113 @@ def build_dataframe():
         st.error("❗ 좌표 데이터가 없습니다.")
         st.stop()
 
-    cond = (~df['신고가'].isna()) & (df['2025년'].isna() | (df['신고가']>df['2025년']))
+    cond = (~df['신고가'].isna()) & (df['2025년'].isna() | (df['신고가'] > df['2025년']))
     df['신고가_유효'] = np.where(cond, df['신고가'], np.nan)
     df['latest'] = np.where(df['신고가_유효'].notna(), df['신고가_유효'], df['2025년'])
-    df['상승률(%)'] = np.where(df['2024년'].notna() & df['latest'].notna(),
-                             ((df['latest']-df['2024년'])/df['2024년']*100).round(1), np.nan)
-    df = (df.sort_values(by=['단지명','평형','신고가_유효','2025년','2024년'], ascending=[True,True,False,False,False])
-            .drop_duplicates(subset=['단지명','평형']).reset_index(drop=True))
+    df['상승률(%)'] = np.where(
+        df['2024년'].notna() & df['latest'].notna(),
+        ((df['latest'] - df['2024년']) / df['2024년'] * 100).round(1),
+        np.nan,
+    )
+
+    df = (
+        df.sort_values(by=['단지명','평형','신고가_유효','2025년','2024년'], ascending=[True,True,False,False,False])
+          .drop_duplicates(subset=['단지명','평형'])
+          .reset_index(drop=True)
+    )
     return df
 
 # ────────────────── 지도 생성 ──────────────────
 
-def build_map(df:pd.DataFrame):
-    m = folium.Map(location=[df['lat'].mean(), df['lon'].mean()], zoom_start=MAP_ZOOM, tiles='CartoDB positron')
+def build_map(df: pd.DataFrame):
+    """folium 지도 + 마커·팝업·오버레이를 구성해 반환"""
+    m = folium.Map(
+        location=[df['lat'].mean(), df['lon'].mean()],
+        zoom_start=MAP_ZOOM,
+        tiles='CartoDB positron',
+    )
+
     cluster = MarkerCluster().add_to(m)
 
-    for name, g in df.groupby('단지명'):
-        lat0, lon0 = g.iloc[0][['lat','lon']]
-        folium.Marker([lat0,lon0], icon=folium.DivIcon(html=f"<div style='font-size:12px;font-weight:bold;background:rgba(255,255,255,0.75);padding:2px 4px;border-radius:4px;'>{name}</div>")).add_to(m)
-        for i, (_, row) in enumerate(g.iterrows()):
-            lat_c, lon_c = (lat0, lon0) if len(g)==1 else (
-                lat0+SEPARATION*sin(2*pi*i/len(g)),
-                lon0+SEPARATION*cos(2*pi*i/len(g))/np.cos(np.radians(lat0)))
-            if len(g)!=1:
-                folium.PolyLine([[lat0,lon0],[lat_c,lon_c]], color="#666", weight=1).add_to(m)
-            popup_html=(f"<div style='font-size:16px;line-height:1.6;'><b>{row['단지명']} {int(row['평형'])}평</b><br>24년 최고가 {money(row['2024년'])}<br>25년 최고가 {money(row['2025년'])}<br>신고가 {shin(row['신고가_유효'])}<br><b>상승률 {rate(row['상승률(%)'])}</b></div>")
-            folium.CircleMarker([lat_c,lon_c], radius=MARKER_RADIUS, fill=True, fill_color=pick_color(row,i,len(g)), fill_opacity=0.9, stroke=False,
-                                 popup=folium.Popup(popup_html,max_width=420), tooltip=f"{int(row['평형'])}평").add_to(cluster)
-            folium.Marker([lat_c,lon_c], icon=folium.DivIcon(html=f"<div style='font-size:11px;font-weight:bold;transform:translate(-50%,-12px);'>{int(row['평형'])}평</div>")).add_to(m)
+    # ── 단지별 루프 ──
+    for name, grp in df.groupby('단지명'):
+        lat0, lon0 = grp.iloc[0][['lat', 'lon']]
 
-    # overlay_html (기존 변수를 그대로 사용)
+        # 단지명 라벨
+        folium.Marker(
+            [lat0, lon0],
+            icon=folium.DivIcon(
+                html=f"<div style='font-size:12px;font-weight:bold;background:rgba(255,255,255,0.75);padding:2px 4px;border-radius:4px;'>{name}</div>"
+            ),
+        ).add_to(m)
+
+        # 평형별 마커
+        for i, (_, row) in enumerate(grp.iterrows()):
+            # 동일 단지에 여러 평형 → 원형 분기 배치
+            lat_c, lon_c = (
+                (lat0, lon0)
+                if len(grp) == 1
+                else (
+                    lat0 + SEPARATION * sin(2 * pi * i / len(grp)),
+                    lon0 + SEPARATION * cos(2 * pi * i / len(grp)) / np.cos(np.radians(lat0)),
+                )
+            )
+            if len(grp) != 1:
+                folium.PolyLine([[lat0, lon0], [lat_c, lon_c]], color="#666", weight=1).add_to(m)
+
+            color = pick_color(row, i, len(grp))
+            popup_html = (
+                f"<div style='font-size:16px; line-height:1.6;'>"
+                f"<b>{row['단지명']} {int(row['평형'])}평</b><br>"
+                f"24년 최고가 {money(row['2024년'])}<br>"
+                f"25년 최고가 {money(row['2025년'])}<br>"
+                f"신고가 {shin(row['신고가_유효'])}<br>"
+                f"<b>상승률 {rate(row['상승률(%)'])}</b>"
+                "</div>"
+            )
+
+            folium.CircleMarker(
+                [lat_c, lon_c],
+                radius=MARKER_RADIUS,
+                fill=True,
+                fill_color=color,
+                fill_opacity=0.9,
+                stroke=False,
+                popup=folium.Popup(popup_html, max_width=420),
+                tooltip=f"{int(row['평형'])}평",
+            ).add_to(cluster)
+
+            # 평형 숫자 라벨
+            folium.Marker(
+                [lat_c, lon_c],
+                icon=folium.DivIcon(
+                    html=f"<div style='font-size:11px;font-weight:bold;transform:translate(-50%,-12px);'>{int(row['평형'])}평</div>"
+                ),
+            ).add_to(m)
+
+    # 오버레이(UI) 삽입
     m.get_root().html.add_child(folium.Element(overlay_html))
     return m
 
 # ────────────────── Streamlit UI ──────────────────
 
 def main():
-    st.set_page_config(page_title="압구정동 신고가 맵", layout="wide", initial_sidebar_state="collapsed")
+    st.set_page_config(
+        page_title="압구정동 신고가 맵",
+        layout="wide",
+        initial_sidebar_state="collapsed",
+    )
 
-    # 15분마다 자동 새로고침
-    st_autorefresh(interval=15*60*1000, key="auto_refresh")
+    # 15분마다 전체 리프레시
+    st_autorefresh(interval=15 * 60 * 1000, key="auto_refresh")
 
-    # 지도 로딩 스피너
+    # ▶︎ 지도 + 데이터 빌드 (스피너 제공)
     with st.spinner("지도 로딩 중…"):
         df = build_dataframe()
         folium_map = build_map(df)
-        # folium 지도 렌더 (iframe) — 훨씬 가벼움
-        st_folium(folium_map, width="100%", height=800, returned_objects=[])
+        # folium을 iframe으로 렌더 — 가볍고 빠름
+        st_folium(folium_map, width="100%", height=800)
+
 
 if __name__ == "__main__":
     main()
