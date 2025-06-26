@@ -19,8 +19,8 @@ from streamlit_autorefresh import st_autorefresh
 from streamlit.components.v1 import html as st_html
 
 # ─────────────────── 시트 / 옵션 ───────────────────
-SHEET_ID = "1V0xg4JMhrcdEm8QAnjACiZXo-8gqcQKy8WoRfMY7wqE"  # Google Sheets ID
-TAB_GID  = 1892600887                                        # 워크시트 gid
+SHEET_ID = "1V0xg4JMhrcdEm8QAnjACiZXo-8gqcQKy8WoRfMY7wqE"
+TAB_GID  = 1892600887
 FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLScu-x_0R-XxNH19J8N5rbI9FkPLgBGOjzY_A9yiFAIMHelCmQ/viewform"
 
 MAP_ZOOM, MARKER_RADIUS, SEPARATION = 16, 24, 0.00035
@@ -40,8 +40,7 @@ def pick_color(row: pd.Series, idx: int, size: int):
         return CUSTOM_COLORS[row['단지명']]
     return DEFAULT_SINGLE_COLOR if size == 1 else BRANCH_COLORS[idx % len(BRANCH_COLORS)]
 
-# ─────────────────── Google Sheets (CSV + cache‑buster) ───────────────────
-@st.cache_data(ttl=5)  # 5 초 캐시 → 실시간 효과
+@st.cache_data(ttl=5)
 def load_sheet_df():
     url = (
         f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export"
@@ -54,12 +53,8 @@ def load_sheet_df():
             df[c] = pd.to_numeric(df[c], errors='coerce')
     return df
 
-# ─────────────────── 데이터 처리 ───────────────────
-
 def build_dataframe() -> pd.DataFrame:
     df = load_sheet_df()
-
-    # 좌표 체크
     if df[['lat', 'lon']].isna().any().any():
         st.error("❗ 시트에 lat/lon 좌표가 누락되었습니다.")
         st.stop()
@@ -74,16 +69,18 @@ def build_dataframe() -> pd.DataFrame:
     )
     return df
 
-# ─────────────────── folium 지도 ───────────────────
-
 def build_map(df: pd.DataFrame) -> folium.Map:
+    """데이터프레임을 받아 folium.Map 생성 + 안내·홍보·제보 박스 오버레이 추가"""
     m = folium.Map(location=[df['lat'].mean(), df['lon'].mean()], zoom_start=MAP_ZOOM, tiles='CartoDB positron')
     cluster = MarkerCluster().add_to(m)
 
+    # ── 단지·평형 마커 ──
     for name, g in df.groupby('단지명'):
         lat0, lon0 = g.iloc[0][['lat', 'lon']]
-        folium.Marker([lat0, lon0],
-            icon=folium.DivIcon(html=f"<div style='font-size:12px;font-weight:bold;background:rgba(255,255,255,0.75);padding:2px 4px;border-radius:4px;'>{name}</div>"))
+        folium.Marker([
+            lat0, lon0
+        ], icon=folium.DivIcon(
+            html=f"<div style='font-size:12px;font-weight:bold;background:rgba(255,255,255,0.75);padding:2px 4px;border-radius:4px;'>{name}</div>"))
         .add_to(m)
 
         for i, (_, row) in enumerate(g.iterrows()):
@@ -96,15 +93,22 @@ def build_map(df: pd.DataFrame) -> folium.Map:
             if len(g) != 1:
                 folium.PolyLine([[lat0, lon0], [lat_c, lon_c]], color="#666", weight=1).add_to(m)
             color = pick_color(row, i, len(g))
-            folium.CircleMarker([lat_c, lon_c], radius=MARKER_RADIUS, fill=True, fill_color=color, fill_opacity=0.9, stroke=False,
+            folium.CircleMarker(
+                [lat_c, lon_c], radius=MARKER_RADIUS, fill=True,
+                fill_color=color, fill_opacity=0.9, stroke=False,
                 popup=folium.Popup(
                     f"<b>{row['단지명']} {int(row['평형'])}평</b><br>24년 최고가 {money(row['2024년'])}<br>25년 최고가 {money(row['2025년'])}<br>신고가 {shin(row['신고가_유효'])}<br><b>상승률 {rate(row['상승률(%)'])}</b>",
-                    max_width=280),
-                tooltip=f"{int(row['평형'])}평" ).add_to(cluster)
-            folium.Marker([lat_c, lon_c],
-                icon=folium.DivIcon(html=f"<div style='font-size:11px;font-weight:bold;transform:translate(-50%,-12px);'>{int(row['평형'])}평</div>")).add_to(m)
+                    max_width=280
+                ),
+                tooltip=f"{int(row['평형'])}평"
+            ).add_to(cluster)
+            folium.Marker([
+                lat_c, lon_c
+            ], icon=folium.DivIcon(
+                html=f"<div style='font-size:11px;font-weight:bold;transform:translate(-50%,-12px);'>{int(row['평형'])}평</div>"))
+            .add_to(m)
 
-    # ───────── overlay CSS & HTML ─────────
+    # ── 안내·홍보·제보 오버레이 CSS/HTML ──
     overlay_html = f"""
     <style>
         body {{position:relative !important;}}
@@ -120,10 +124,31 @@ def build_map(df: pd.DataFrame) -> folium.Map:
         }}
     </style>
 
+    <!-- 타이틀 -->
     <div class='overlay-box' style='top:8px; left:50%; transform:translateX(-50%); text-align:center; z-index:9999;'>
         <div style='font-size:20px; font-weight:bold; background:rgba(255,255,255,0.9); padding:2px 8px; border-radius:4px;'>압구정동 신고가 맵</div>
         <div style='font-size:14px;'>신고가가 생길 때마다 자동 업데이트됩니다</div>
     </div>
 
+    <!-- 안내 박스 -->
     <div class='overlay-box legend' style='background:rgba(255,255,255,0.95); padding:10px; font-size:12px; line-height:1.5; border:1px solid #ccc; border-radius:6px;'>
         <b>📌 안내</b><br>
+        - 실거래 신고가 미등록 거래를 표시합니다.<br>
+        - 마커를 클릭하면 단지·평형별 상세 정보 확인 가능<br>
+        - 신고가는 해약·취소될 수 있으며 참고용입니다.
+    </div>
+
+    <!-- 홍보 박스 -->
+    <div class='overlay-box promo' style='background:#ffe6f2; border:2px solid #ff99cc; border-radius:6px; padding:8px; font-size:12px; line-height:1.3; text-align:center;'>
+        <b>압구정 거래는<br>"압구정 원 부동산"</b><br>
+        ☎ 02-540-3334
+    </div>
+
+    <!-- 신고가 제보 버튼 -->
+    <div class='overlay-box report-btn'>
+        <a href='{FORM_URL}' target='_blank' style='background:#007bff; color:#fff; padding:10px 18px; border-radius:6px; font-size:14px; font-weight:bold; text-decoration:none;'>📝 신고가 제보하기</a>
+    </div>
+    """
+    m.get_root().html.add_child(folium.Element(overlay_html))
+
+    return m
